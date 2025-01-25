@@ -5,12 +5,7 @@ from bs4 import BeautifulSoup as bs
 from config import promt
 
 file_pars = r"C:\Users\prive\Downloads\Saalbach.pst"
-
-
-pst = pypff.file()
-pst.open(file_pars)
-root = pst.get_root_folder()
-
+file_pars2 =r"C:\Users\prive\Downloads\backup.pst"
 
 def parse_folder(base):
     messages = []
@@ -20,13 +15,19 @@ def parse_folder(base):
             messages += parse_folder(folder)
         # Обработка писем в текущей папке
         for message in folder.sub_messages:
-                messages.append({
-                    "folder": folder.name,
-                    "subject": message.subject,
-                    "sender_name": message.sender_name,
-                    "datetime": message.client_submit_time,  
-                    "body_plain": message.get_html_body()   
-                })
+            body_plain = None
+            try:
+                body_plain = message.get_html_body()  # Attempt to get the HTML body
+            except OSError:
+                body_plain = "No HTML body available."  # Handle the error gracefully
+
+            messages.append({
+                "folder": folder.name,
+                "subject": message.subject,
+                "sender_name": message.sender_name,
+                "datetime": message.client_submit_time,  
+                "body_plain": body_plain  # Use the retrieved or default value
+            })
     return messages
 
 
@@ -51,6 +52,9 @@ def make_request(prompt, context_message):  # Get the prompt from the config fil
     return response['choices'][0]['message']['content']
 
 
+pst = pypff.file()
+pst.open(file_pars2)
+root = pst.get_root_folder()
 # Извлечение всех писем из файла
 messages = parse_folder(root)
 i = 1
