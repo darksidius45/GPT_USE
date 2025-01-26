@@ -125,14 +125,6 @@ def get_company_website(name, exhibitor_url):
             return "error", "error", "error", "error", "error"
         
     except Exception as e:
-        # query = f"{name} site"
-        # print(f"WebDriverException occurred: {e}")
-        # try:
-        #     for result in search(query, num_results=10, proxies={"http": f"http://{PROXY_USER}:{PROXY_PASSWORD}@{get_random_proxy()}:{PROXY_PORT}"}):
-        #         if all(exclusion not in result for exclusion in ['youtube.com', 'facebook.com', 'wikipedia.org', 'linkedin.com']):
-        #             return result
-        # except requests.exceptions.HTTPError as e:
-        #     print(f"HTTP error occurred: {e}")
         print(e)    
         return "error", "error", "error", "error", "error"
 
