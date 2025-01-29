@@ -18,6 +18,8 @@ from bs4 import BeautifulSoup
 # from config import promt
 import pandas as pd
 from urllib.parse import urlparse, urljoin
+import tempfile
+import os
 
 PROXY_PORT = 5500
 PROXY_USER = "5vWk59"
@@ -82,89 +84,97 @@ def get_site_text(website):
     all_texts = []
 
     try:
-        driver.get(website)
-        time.sleep(3)
+        try:  # Set a longer page load timeout
+            driver.get(website)
+            
+        except WebDriverException as e:
+            print(f"WebDriverException occurred while accessing {website}: {e}")
+            driver.quit()
+            return None
+        
         page_source = driver.page_source
         soup = BeautifulSoup(page_source, "html.parser")
         all_texts.append(soup.get_text(separator=" ", strip=True))
 
         hrefs_set = set()
-        clickable_elements = []
+        clickable_elements = set()
         for element in soup.find_all(['a', 'button', 'input', 'area']):
             if element.has_attr('href'):
                 href = element['href']
                 if href not in hrefs_set and original_domain in urlparse(href).netloc and any(keyword in href for keyword in keywords):
-                    clickable_elements.append(element)
+                    clickable_elements.add(element['href'])
         for i in clickable_elements:
-            print(i, end = "\n")
+            print(i, end="\n")
         for element in clickable_elements:
-            if element.has_attr('href'):
-                new_link = urljoin(website, element['href'])
-                if original_domain in urlparse(new_link).netloc and any(keyword in new_link for keyword in keywords):
-                    driver.get(new_link)
-                    time.sleep(3)
-                    page_source = driver.page_source
-                    soup = BeautifulSoup(page_source, "html.parser")
-                    all_texts.append(soup.get_text(separator=" ", strip=True))
-            elif element.has_attr('onclick'):
-                # Extract URL from onclick JavaScript if possible
-                onclick_content = element['onclick']
-                # This is a simple heuristic to extract URLs from JavaScript
-                url_start = onclick_content.find("http")
-                if url_start != -1:
-                    url_end = onclick_content.find("'", url_start)
-                    if url_end == -1:
-                        url_end = onclick_content.find('"', url_start)
-                    if url_end != -1:
-                        new_link = onclick_content[url_start:url_end]
-                        if original_domain in urlparse(new_link).netloc and any(keyword in new_link for keyword in keywords):
-                            driver.get(new_link)
-                            time.sleep(3)
-                            page_source = driver.page_source
-                            soup = BeautifulSoup(page_source, "html.parser")
-                            all_texts.append(soup.get_text(separator=" ", strip=True))
+            new_link = urljoin(website, element)
+            driver.get(new_link)
+            WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'body')))  # Wait for the new page to load
+            page_source = driver.page_source
+            soup = BeautifulSoup(page_source, "html.parser")
+            all_texts.append(soup.get_text(separator=" ", strip=True))
     except WebDriverException as e:
-        print(f"Error accessing {website}: {e}")
+        print(f"WebDriverException occurred while accessing {website}: {e}")
+    except TimeoutError as e:
+        print(f"TimeoutError occurred while accessing {website}: {e}")
+    except Exception as e:
+        print(f"An unexpected error occurred while accessing {website}: {e}")
     finally:
         driver.quit()
 
-    return all_texts
+    return " ".join(all_texts)
 
 
 def gemini_flash(text):
-    curl_command = [
-        "curl",
-        "https://api.proxyapi.ru/google/v1/models/gemini-1.5-flash:generateContent",
-        "-H", "Content-Type: application/json",
-        "-H", f"Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
-        "-d", json.dumps({
+    # Create a temporary file to store the JSON data
+    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json') as temp_file:
+        json_data = {
             "contents": [{"role": "user", "parts": [{"text": text}]}]
-        })
-    ]
-    result = subprocess.run(curl_command, capture_output=True, text=True, encoding='utf-8')
-    if result.returncode == 0:
-        response = json.loads(result.stdout)
-        print(response)
-        return response
-    else:
-        print("Error executing curl command:", result.stderr)
-        return None
+        }
+        json.dump(json_data, temp_file)
+        temp_file.flush()  # Ensure the data is written
+
+        # Get the name of the temporary file
+        temp_file_name = temp_file.name
+
+    try:
+        # Simplified curl command using the temporary file
+        curl_command = [
+            "curl",
+            "https://api.proxyapi.ru/google/v1/models/gemini-1.5-flash:generateContent",
+            "-H", "Content-Type: application/json",
+            "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
+            "-d", f"@{temp_file_name}"  # Use the temp file
+        ]
+
+        result = subprocess.run(curl_command, capture_output=True, text=True, encoding='utf-8')
+        if result.returncode == 0:
+            response = json.loads(result.stdout)
+            text_response = response['candidates'][0]['content']['parts'][0]['text']
+            print(text_response)
+            return text_response
+        else:
+            print("Error executing curl command:", result.stderr)
+            return None
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(temp_file_name):
+            os.remove(temp_file_name)
 
 
 
-df = openpyxl.load_workbook("out.xlsx")
-sheet = df.active
-company_data = []
-for row in sheet.iter_rows(min_row=2):
+# df = openpyxl.load_workbook("out.xlsx")
+
+
+
+# df = openpyxl.load_workbook("out.xlsx")
+# sheet = df.active
+new_workbook = openpyxl.load_workbook("new_output1.xlsx")
+new_sheet = new_workbook.active
+
+for row in new_sheet.iter_rows(min_row=3):  # Changed min_row to 7
     name = row[0].value
-    website = row[1].value
-    categories = row[4].value
-    description = row[5].value
-    if not website or website == "error":
-        website = find_website(name)
-        row[1].value = website  # Save the website in the Excel sheet
-    site_text = get_site_text(website)
-    site_info = gemini_flash(f"tell me about this company according to this text from their site{site_text}")
-    company_data.append((name, website, categories, description, site_info))
-    row[6].value = site_info
-df.save("out.xlsx")  # Save the changes to the Excel file
+    website_text = row[1].value
+    if website_text != "":
+        site_text_short = gemini_flash(f"tell me about this company {website_text}")
+        new_sheet.append([name, website_text, site_text_short])  # Add site_text_short to the next column
+    new_workbook.save(f"new_output1.xlsx")
