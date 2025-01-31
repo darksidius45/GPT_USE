@@ -66,12 +66,5 @@ promt = (
 )
 
 
-import openpyxl
 
-# Create a new workbook and select the active worksheet
-workbook = openpyxl.Workbook()
-sheet = workbook.active
-
-# Save the workbook to a file
-workbook.save("out.xlsx")
 
