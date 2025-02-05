@@ -64,7 +64,3 @@ promt = (
     "Sustainability: Energy-efficient systems and eco-friendly materials.\n\n"
     "In summary, AV integrations are a critical component of modern workspaces, educational environments, and event venues. By combining cutting-edge technology with thoughtful design, AV integrations empower users to communicate, collaborate, and create more effectively."
 )
-
-
-
-

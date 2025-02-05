@@ -53,9 +53,9 @@
 #             print(f"WebDriverException occurred: {e}")
 #             driver.quit()
 #             return "error", "error", "error", "error", "error"
-        
+
 #     except Exception as e:
-#         print(e)    
+#         print(e)
 #         return "error", "error", "error", "error", "error"
 
 # def check_av_integration_needs_with_gpt(prompt):
@@ -69,7 +69,7 @@
 #     #     site_element = driver.page_source
 #     #     soup = BeautifulSoup(site_element, "html.parser")
 #     #     hrefs = []
-        
+
 #     #     for a_tag in soup.find_all('a', href=True):
 #     #         href = a_tag['href']
 #     #         if not any(exclusion in href for exclusion in ['youtube.com', 'wikipedia.org', 'facebook.com', 'instagram.com']):
@@ -86,7 +86,7 @@
 
 #     #         except requests.exceptions.RequestException as e:
 #     #             print(f"Error fetching {href}: {e}")
-        
+
 #     #     print(main_page_text)
 #     #     driver.quit()
 #     # except WebDriverException as e:
@@ -99,31 +99,31 @@
 #     # prompt = f"tell me about this company: you have this text about it {main_page_text}"
 #     # try:
 #     #     curl_command = [
-    
+
 #     #     "curl",
 #     #     "https://api.proxyapi.ru/openai/v1/chat/completions",
 #     #     "-H", "Content-Type: application/json",
-#     #     "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h", 
+#     #     "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
 #     #     "-d", json.dumps({
 #     #         "model": "gpt-4o-mini",
 #     #         "messages": [{"role": "user", "content": prompt}],
-#     #         "stream": False 
+#     #         "stream": False
 #     #     })
 #     #     ]
 
-    
+
 #     #     result = subprocess.run(curl_command, capture_output=True, text=True, encoding='utf-8')
 #         curl_command_2 = [
 #             "curl",
 #             "https://api.proxyapi.ru/openai/v1/chat/completions",
 #             "-H", "Content-Type: application/json",
-#             "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h", 
+#             "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
 #             "-d", json.dumps({
 #                 "model": "gpt-4o-mini",
 #                 "messages": [
 #                     {"role": "user", "content": f"is this company connected with av integration and how, first write yes or no, then write why?{prompt} {promt}"}
 #                 ],
-#                 "stream": False 
+#                 "stream": False
 #             })
 #         ]
 
@@ -131,19 +131,19 @@
 #         response = json.loads(result_2.stdout)
 #         print(response['choices'][0]['message']['content'])
 #         return response['choices'][0]['message']['content']
-        
+
 
 #     #     if result_2.returncode != 0:
 #     #         print("Error executing second curl command:", result_2.stderr)
 #     #         driver.quit()
-#     #         return "rrrrr", "rrrrr" 
+#     #         return "rrrrr", "rrrrr"
 
 #     #     response_2 = json.loads(result_2.stdout)
 
 #     #     if result.returncode != 0:
 #     #         print("Error executing curl command:", result.stderr)
 #     #         driver.quit()
-#     #         return "rrrrr", "rrrrr" 
+#     #         return "rrrrr", "rrrrr"
 
 #     #     response = json.loads(result.stdout)
 #     #     print(response['choices'][0]['message']['content'])
@@ -153,7 +153,6 @@
 #     #     print(f"Error checking site {site}: {e}")
 #     #     driver.quit()
 #     #     return "eror", "eror"
-
 
 
 # output_file = r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output.xlsx"
@@ -172,8 +171,6 @@
 #             href = "https://ise2025.mapyourshow.com" + a_tag['href']
 #             company_name = a_tag.find('span').text.replace('\n', '')
 #             company_names.add((company_name, href))
-
-
 
 
 # for match in company_names:

@@ -6,27 +6,28 @@ from config import promt
 import re
 
 file_pars = r"C:\Users\prive\Downloads\Saalbach.pst"
-file_pars2 =r"C:\Users\prive\Downloads\backup.pst"
+file_pars2 = r"C:\Users\prive\Downloads\backup.pst"
 
 
 def process_plain_text_body(message):
-    return re.sub(r'([\r\n]+ ?)+', r'\r\n', message.plain_text_body.decode('utf-8')) 
+    return re.sub(r"([\r\n]+ ?)+", r"\r\n", message.plain_text_body.decode("utf-8"))
+
 
 # Обработка html тела
 def process_html_body(message):
     soup = bs(message.html_body(), "lxml")
     plain_text = soup.get_text()
     # Удаление html комментариев
-    plain_text = re.sub(r'(<!--.*-->)+', r'', plain_text, flags=re.S)
-    plain_text = re.sub(r'([\r\n]+ ?)+', r'\r\n', plain_text)
+    plain_text = re.sub(r"(<!--.*-->)+", r"", plain_text, flags=re.S)
+    plain_text = re.sub(r"([\r\n]+ ?)+", r"\r\n", plain_text)
     return plain_text
+
 
 def get_body(message):
     if message.get_plain_text_body():
         return process_plain_text_body(message)
     if message.get_html_body():
         return process_html_body(message)
-
 
 
 def parse_folder(base):
@@ -43,16 +44,19 @@ def parse_folder(base):
             except OSError:
                 body_plain = "No HTML body available."  # Handle the error gracefully
 
-            messages.append({
-                "folder": folder.name,
-                "subject": message.subject,
-                "sender_name": message.sender_name,
-                "sender_email": message.sender_email_address,
-                "datetime": message.client_submit_time,  
-                "body_plain": get_body(message)  # Get the whole body of the message
-            })
+            messages.append(
+                {
+                    "folder": folder.name,
+                    "subject": message.subject,
+                    "sender_name": message.sender_name,
+                    "sender_email": message.sender_email_address,
+                    "datetime": message.client_submit_time,
+                    "body_plain": get_body(
+                        message
+                    ),  # Get the whole body of the message
+                }
+            )
     return messages
-
 
 
 # def make_request(prompt, context_message):  # Get the prompt from the config file
@@ -62,11 +66,11 @@ def parse_folder(base):
 #         "curl",
 #         "https://api.proxyapi.ru/openai/v1/chat/completions",
 #         "-H", "Content-Type: application/json",
-#         "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h", 
+#         "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
 #         "-d", json.dumps({
 #             "model": "gpt-4o-mini",
 #             "messages": [{"role": "user", "content": full_prompt}],
-#             "stream": False 
+#             "stream": False
 #         })
 #     ]
 
@@ -91,7 +95,9 @@ for message in messages:
     message_str += f"  Email: {message['sender_email']}"
     message_str += f"  Date and Time: {message['datetime']}\n"
     message_str += f"  Body: {get_body(message['body_plain'])}\n"
-    message_str = "\n".join(line.strip() for line in message_str.splitlines() if line.strip())
+    message_str = "\n".join(
+        line.strip() for line in message_str.splitlines() if line.strip()
+    )
     messages_str.append(message_str)
     i += 1
 

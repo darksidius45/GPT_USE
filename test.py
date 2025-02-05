@@ -3,6 +3,7 @@ import json
 import subprocess
 import tempfile
 import os
+
 # from config import promt
 promt = (
     "Definition of AV Integrations: A Comprehensive Overview\n\n"
@@ -71,12 +72,13 @@ promt = (
     "In summary, AV integrations are a critical component of modern workspaces, educational environments, and event venues. By combining cutting-edge technology with thoughtful design, AV integrations empower users to communicate, collaborate, and create more effectively."
 )
 
+
 def gemini_flash(text):
     # Create a temporary file to store the JSON data
-    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json') as temp_file:
-        json_data = {
-            "contents": [{"role": "user", "parts": [{"text": text}]}]
-        }
+    with tempfile.NamedTemporaryFile(
+        delete=False, mode="w", suffix=".json"
+    ) as temp_file:
+        json_data = {"contents": [{"role": "user", "parts": [{"text": text}]}]}
         json.dump(json_data, temp_file)
         temp_file.flush()  # Ensure the data is written
 
@@ -88,15 +90,20 @@ def gemini_flash(text):
         curl_command = [
             "curl",
             "https://api.proxyapi.ru/google/v1/models/gemini-1.5-flash:generateContent",
-            "-H", "Content-Type: application/json",
-            "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
-            "-d", f"@{temp_file_name}"  # Use the temp file
+            "-H",
+            "Content-Type: application/json",
+            "-H",
+            "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
+            "-d",
+            f"@{temp_file_name}",  # Use the temp file
         ]
 
-        result = subprocess.run(curl_command, capture_output=True, text=True, encoding='utf-8')
+        result = subprocess.run(
+            curl_command, capture_output=True, text=True, encoding="utf-8"
+        )
         if result.returncode == 0:
             response = json.loads(result.stdout)
-            text_response = response['candidates'][0]['content']['parts'][0]['text']
+            text_response = response["candidates"][0]["content"]["parts"][0]["text"]
             print(text_response)
             return text_response
         else:
@@ -106,8 +113,6 @@ def gemini_flash(text):
         # Clean up the temporary file
         if os.path.exists(temp_file_name):
             os.remove(temp_file_name)
-
-
 
 
 df = openpyxl.load_workbook("out.xlsx")
@@ -121,7 +126,22 @@ for row in sheet.iter_rows(min_row=3):
     about_little = row[5].value
     site_text = row[6].value
     if site_text != "":
-        site_text_short = gemini_flash(f"tell me about this company categroies:{categories} , about them{about_little}, their site:{site_text}")
-        answer = gemini_flash(f"tell me if this company is connected with av integrations(i need 1 world yes or no in the begging then, distributor” или “integrator” или “manufacturer, and only then why) company info - categroies:{categories} , about them{about_little}, their site:{site_text}. AV integrations: {promt}")
-        sheet.append([name, site, phone_number, adress, categories, about_little, site_text_short, answer]) 
+        site_text_short = gemini_flash(
+            f"tell me about this company categroies:{categories} , about them{about_little}, their site:{site_text}"
+        )
+        answer = gemini_flash(
+            f"tell me if this company is connected with av integrations(i need 1 world yes or no in the begging then, distributor” или “integrator” или “manufacturer, and only then why) company info - categroies:{categories} , about them{about_little}, their site:{site_text}. AV integrations: {promt}"
+        )
+        sheet.append(
+            [
+                name,
+                site,
+                phone_number,
+                adress,
+                categories,
+                about_little,
+                site_text_short,
+                answer,
+            ]
+        )
     df.save("out.xlsx")

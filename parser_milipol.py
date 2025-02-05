@@ -5,25 +5,59 @@ import tempfile
 import os
 from bs4 import BeautifulSoup
 
-output_file = r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\output_milipol.xlsx"
+output_file = (
+    r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\output_milipol.xlsx"
+)
 file_pars = r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\pars_files\pars_milipol.txt"
 company_pars = r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\pars_files\company_names.xlsx"
 
 company_names = set()
 
+
 def normalize_name(name):
     normalized_name = name.lower()  # Convert to lowercase
-    normalized_name = normalized_name.replace('–', '-')  # Replace long dashes with regular dashes
-    normalized_name = normalized_name.replace('—', '-')  # Replace em dashes with regular dashes  # Replace hyphens with spaces
-    normalized_name = ' '.join(normalized_name.split())  # Remove extra spaces
+    normalized_name = normalized_name.replace(
+        "–", "-"
+    )  # Replace long dashes with regular dashes
+    normalized_name = normalized_name.replace(
+        "—", "-"
+    )  # Replace em dashes with regular dashes  # Replace hyphens with spaces
+    normalized_name = " ".join(normalized_name.split())
+    # Remove extra spaces and common company suffixes/words
+    normalized_name = (
+        normalized_name.replace(" inc", "").replace(" llc", "").replace(" ltd", "")
+    )
+    normalized_name = (
+        normalized_name.replace(" gmbh", "").replace(" srl", "").replace(" sa", "")
+    )
+    normalized_name = normalized_name.replace(" technologies", "").replace(
+        " technology", ""
+    )
+    normalized_name = normalized_name.replace(" international", "").replace(" corp", "")
+    normalized_name = normalized_name.replace(" co", "").replace(" company", "")
+    normalized_name = normalized_name.replace(" group", "").replace(" holding", "")
+    normalized_name = normalized_name.replace(" systems", "").replace(" solutions", "")
+    normalized_name = normalized_name.replace(" industries", "").replace(
+        " industrial", ""
+    )
+    normalized_name = (
+        normalized_name.replace(" ag", "").replace(" nv", "").replace(" bv", "")
+    )
+    normalized_name = normalized_name.replace(" limited", "").replace(
+        " incorporated", ""
+    )
+    normalized_name = " ".join(
+        normalized_name.split()
+    )  # Remove any remaining extra spaces
     return normalized_name
+
 
 def gemini_flash(text):
     # Create a temporary file to store the JSON data
-    with tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json') as temp_file:
-        json_data = {
-            "contents": [{"role": "user", "parts": [{"text": text}]}]
-        }
+    with tempfile.NamedTemporaryFile(
+        delete=False, mode="w", suffix=".json"
+    ) as temp_file:
+        json_data = {"contents": [{"role": "user", "parts": [{"text": text}]}]}
         json.dump(json_data, temp_file)
         temp_file.flush()  # Ensure the data is written
 
@@ -35,15 +69,20 @@ def gemini_flash(text):
         curl_command = [
             "curl",
             "https://api.proxyapi.ru/google/v1/models/gemini-1.5-flash:generateContent",
-            "-H", "Content-Type: application/json",
-            "-H", "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
-            "-d", f"@{temp_file_name}"  # Use the temp file
+            "-H",
+            "Content-Type: application/json",
+            "-H",
+            "Authorization: Bearer sk-UmoxJZ8wJm1DEmcSrwP3Iu9Bk4TGZJ0h",
+            "-d",
+            f"@{temp_file_name}",  # Use the temp file
         ]
 
-        result = subprocess.run(curl_command, capture_output=True, text=True, encoding='utf-8')
+        result = subprocess.run(
+            curl_command, capture_output=True, text=True, encoding="utf-8"
+        )
         if result.returncode == 0:
             response = json.loads(result.stdout)
-            text_response = response['candidates'][0]['content']['parts'][0]['text']
+            text_response = response["candidates"][0]["content"]["parts"][0]["text"]
             print(text_response)
             return text_response
         else:
@@ -53,7 +92,6 @@ def gemini_flash(text):
         # Clean up the temporary file
         if os.path.exists(temp_file_name):
             os.remove(temp_file_name)
-
 
 
 df = openpyxl.load_workbook(output_file)  # Load the existing workbook
@@ -80,21 +118,25 @@ sheet = df.active
 # for row in company_sheet.iter_rows(min_row=2, values_only=True):
 #     company_name = row[0]
 #     normalized_name = normalize_name(company_name)
-#     sheet[f"B{i}"].value = normalized_name 
+#     sheet[f"B{i}"].value = normalized_name
 #     i += 1
 # df.save(output_file)
 
 company_names1 = []
-company_names2 = []
+company_names2 = set()
 
 for row in sheet.iter_rows(min_row=1, values_only=True):
-    company_name1 = row[0]
-    company_name2 = row[1]
+    company_name1 = normalize_name(row[0])
+    company_name2 = normalize_name(row[1])
     company_names1.append(company_name1)
-    company_names2.append(company_name2)
+    company_names2.add(company_name2)
 
-print(gemini_flash(f"find the common companies in the following lists, altho write down, companies with very similar names, but not the same if it is possible for them to be the same company (please note that the names may be different due to the fact that there are words with the designation of countries, the words co, ltd and other words that do not relate to the name itself.): the first list is {company_names1} and the second list is {company_names2}"))
+
+print(
+    gemini_flash(
+        f"find the common companies in the following lists, altho write down, companies with very similar names, but not the same if it is possible for them to be the same company (please note that the names may be different due to the fact that there are words with the designation of countries, the words co, ltd and other words that do not relate to the name itself., for example, if the company is called 'company' and the other is 'company co', it is the same company(example:extron electronics europe inc. is the same as extron)): the first list is {" ".join(company_names1)} and the second list is {" ".join(company_names2)}"
+    )
+)
 
 
 df.close()  # Save changes to the output file
-
