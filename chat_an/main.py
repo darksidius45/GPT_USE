@@ -2,7 +2,7 @@ import json
 import subprocess
 import pypff
 from bs4 import BeautifulSoup as bs
-from config import promt
+from sito_info.config import promt
 import re
 
 file_pars = r"C:\Users\prive\Downloads\Saalbach.pst"

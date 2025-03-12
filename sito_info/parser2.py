@@ -362,17 +362,13 @@ def gemini_flash(text):
 
 
 df = openpyxl.load_workbook(r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\out.xlsx")
-write = openpyxl.load_workbook(r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\new_output1.xlsx")
-
-
-
+write = openpyxl.load_workbook(r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\new_output2.xlsx")
 
 sheet = df.active
 write_sheet = write.active
-# write_sheet.delete_rows(1, write_sheet.max_row)
-# write.save(r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\new_output1.xlsx")
 
-for row in sheet.iter_rows(min_row=294):
+
+for row in sheet.iter_rows(min_row=944):
     name = row[0].value
     site = row[1].value
     phone_number = row[2].value
@@ -380,27 +376,27 @@ for row in sheet.iter_rows(min_row=294):
     categories = row[4].value
     about_little = row[5].value
     site_text = get_site_text(site)
-    # if site_text != "":
+    if site_text != "":
         # site_info = gemini_flash(
-        # f"retelling the text {site_text}.Say if it is distributor, integrator or manufacturer according to the text: {distributor}. Focus on what the company does (manufactures or resells) and tell us about their products and services."
-        # )
-        # answer = gemini_flash(
-        #     f"tell me if this company is connected with my defenition of av integrations(AV integrations: {av_integrator})(i need 1 world yes or no in the begging and only then why) company info - categroies:{categories} , about them{about_little}, their site:{site_info}. Remeber i need only video intergrations"
-        # )
-    # else:
-    #     # answer = "error"
-    #     site_info = "error"
-    
-cleaned_values = []
-for value in [name, site, phone_number, adress, categories, about_little, site_text]:
-    if value is None:
-        cleaned_values.append("")
+        f"retelling the text {site_text}.Say if it is distributor, integrator or manufacturer according to the text: {distributor}. Focus on what the company does (manufactures or resells) and tell us about their products and services."
+        
+        answer = gemini_flash(
+            f"tell me if this company is connected with my defenition of av integrations(AV integrations: {av_integrator})(i need 1 world yes or no in the begging and only then why) company info - categroies:{categories} , about them{about_little}, their site:{site_info}. Remeber i need only video intergrations"
+        )
     else:
+        # answer = "error"
+        site_info = "error"
+    # Clean and validate text values before writing
+    cleaned_values = []
+    for value in [name, site, phone_number, adress, categories, about_little, site_text]:
+        if value is None:
+            cleaned_values.append("")
+        else:
             # Remove or replace problematic characters
             cleaned_value = str(value).encode('ascii', 'ignore').decode()
             cleaned_values.append(cleaned_value)
             
     write_sheet.append(cleaned_values)
+    write.save(r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\new_output2.xlsx")
 
-write.save(r"C:\Users\prive\Desktop\prog\rgb\GPT_USE\output_files\new_output1.xlsx")
 df.close()
